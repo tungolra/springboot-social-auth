@@ -3,6 +3,8 @@ package com.example;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -36,7 +38,18 @@ public class SocialApplication extends WebSecurityConfigurerAdapter {
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 				.logout(l -> l
 						.logoutSuccessUrl("/").permitAll())
-				.oauth2Login();
+				.oauth2Login(o -> o
+						.failureHandler((request, response, exception) -> {
+							request.getSession().setAttribute("error.message", exception.getMessage());
+							exception.printStackTrace();
+						}));
+	}
+
+	@GetMapping("/error")
+	public String error(HttpServletRequest request) {
+		String message = (String) request.getSession().getAttribute("error.message");
+		request.getSession().removeAttribute("error.message");
+		return message;
 	}
 
 	public static void main(String[] args) {
